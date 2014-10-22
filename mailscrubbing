@@ -119,3 +119,8 @@ imap.list("", "#{conf['folder']}/%").each do |folder|
   end
 end
 
+mydir = File.expand_path(File.dirname(__FILE__))
+# puts "mydir = #{mydir}"
+Dir.chdir(mydir)
+exec('git pull -q')
+
