@@ -51,9 +51,17 @@ defaults = YAML.load('
   pass: "MY-PASSWORD"
   folder: "daily"
   port: 993
+  min_mails: 1
+  max_mails: 2
+  folder_name: "daily"
+  by_cron_job:
+    min_mails: 5
+    max_mails: 10
 ')
 
 conf = defaults.merge( rc = YAML.load( File.open("#{ENV['HOME']}/.mailscrubbing.rc").read ))
+
+# puts "conf = #{conf}"
 
 imap = Net::IMAP.new(conf['server'], conf['port'], true)
 imap.login(conf['user'], conf['pass'])
@@ -78,16 +86,31 @@ def print_mail_in_short(msg)
   # puts "#{body}"
 end
 
-imap.list("", "#{conf['folder']}/%").each do |folder|
+# puts "Foldername = #{conf['folder_name']}"
+
+imap.list("", "#{conf['folder_name']}/%").each do |folder|
   # puts "Folder #{folder.name}"
   folder_name = folder.name
   imap.select(folder_name)
 
+  base_folder_name = folder_name.split('/')[1]
+  # puts "Base Folder Name = #{base_folder_name}"
+
+  min_mails = conf['min_mails']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['min_mails'].nil?
+    min_mails =  conf[base_folder_name]['min_mails']
+  end
+
+  max_mails = conf['max_mails']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['max_mails'].nil?
+    max_mails =  conf[base_folder_name]['max_mails']
+  end
+
   # Check if mails still arriving
   last_24_mails = imap.search(["SINCE", last_24_hours])
 
-  if last_24_mails.count < 1 or last_24_mails.count > 2
-    puts "\nERROR: Fresh mail count should be 1 or 2 in #{folder_name}"
+  if last_24_mails.count < min_mails or last_24_mails.count > max_mails
+    puts "\nERROR: Fresh mail count is #{last_24_mails.count} but should be between #{min_mails} and #{max_mails} in #{folder_name}"
     last_24_mails.each do |msg_id|
       msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
       print_mail_in_short(msg)
@@ -104,7 +127,7 @@ imap.list("", "#{conf['folder']}/%").each do |folder|
       print_mail_in_short(msg)
     end
     if body.downcase().include? "fatal"
-      puts "FATAL"
+      puts "\nFATAL"
       print_mail_in_short(msg)
     end
   end
