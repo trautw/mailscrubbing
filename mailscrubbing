@@ -53,6 +53,7 @@ defaults = YAML.load('
   port: 993
   min_mails: 1
   max_mails: 2
+  maxage: 30
   folder_name: "daily"
   by_cron_job:
     min_mails: 5
@@ -132,8 +133,13 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
     end
   end
 
+  maxage = conf['maxage']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['maxage'].nil?
+    maxage =  conf[base_folder_name]['maxage']
+  end
+
   # Delete old mails
-  old_before = (Time.now - 10*24*60*60).strftime("%d-%b-%Y")
+  old_before = (Time.now - maxage*24*60*60).strftime("%d-%b-%Y")
   imap.search(["NOT", "SINCE", old_before]).each do |msg_id|
     msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
     # puts "\nDELETING"
