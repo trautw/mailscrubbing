@@ -151,5 +151,5 @@ end
 mydir = File.expand_path(File.dirname(__FILE__))
 # puts "mydir = #{mydir}"
 Dir.chdir(mydir)
-exec('git pull -q')
+system 'git pull -q'
 
