@@ -51,6 +51,7 @@ defaults = YAML.load('
   pass: "MY-PASSWORD"
   folder: "daily"
   port: 993
+  arrival_period: 1
   min_mails: 1
   max_mails: 2
   maxage: 30
@@ -67,7 +68,12 @@ conf = defaults.merge( rc = YAML.load( File.open("#{ENV['HOME']}/.mailscrubbing.
 imap = Net::IMAP.new(conf['server'], conf['port'], true)
 imap.login(conf['user'], conf['pass'])
 
-last_24_hours = (Time.now - 24*60*60).strftime("%d-%b-%Y")
+arrival_period = conf['arrival_period']
+unless conf[base_folder_name].nil? or conf[base_folder_name]['arrival_period'].nil?
+  arrival_period =  conf[base_folder_name]['arrival_period']
+end
+
+last_24_hours = (Time.now - 24*60*60*arrival_period).strftime("%d-%b-%Y")
 
 def pretty_mail_adresses(mailadresses)
   result = ""
