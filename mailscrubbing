@@ -68,13 +68,6 @@ conf = defaults.merge( rc = YAML.load( File.open("#{ENV['HOME']}/.mailscrubbing.
 imap = Net::IMAP.new(conf['server'], conf['port'], true)
 imap.login(conf['user'], conf['pass'])
 
-arrival_period = conf['arrival_period']
-unless conf[base_folder_name].nil? or conf[base_folder_name]['arrival_period'].nil?
-  arrival_period =  conf[base_folder_name]['arrival_period']
-end
-
-last_24_hours = (Time.now - 24*60*60*arrival_period).strftime("%d-%b-%Y")
-
 def pretty_mail_adresses(mailadresses)
   result = ""
   mailadresses.each do |mailadress|
@@ -102,6 +95,13 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
 
   base_folder_name = folder_name.split('/')[1]
   # puts "Base Folder Name = #{base_folder_name}"
+
+  arrival_period = conf['arrival_period']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['arrival_period'].nil?
+    arrival_period =  conf[base_folder_name]['arrival_period']
+  end
+
+  last_24_hours = (Time.now - 24*60*60*arrival_period).strftime("%d-%b-%Y")
 
   min_mails = conf['min_mails']
   unless conf[base_folder_name].nil? or conf[base_folder_name]['min_mails'].nil?
