@@ -137,6 +137,10 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
       puts "\nFATAL"
       print_mail_in_short(msg)
     end
+    if body.downcase().include? "critical"
+      puts "\nCRITICAL"
+      print_mail_in_short(msg)
+    end
   end
 
   maxage = conf['maxage']
