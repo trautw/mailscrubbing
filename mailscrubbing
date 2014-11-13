@@ -129,7 +129,7 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
     msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
     body = msg.attr["BODY[TEXT]"]
     # puts "#{body}"
-    if body.downcase().gsub(/(logs\/www\/error_log|ElsterErrorInfos.txt|Error 404 - Natural Things.mp3)/,'this_is_ok').include? "error"
+    if body.downcase().gsub(/(logs\/www\/error_log|if_errors-6in4-wan6.rrd|ElsterErrorInfos.txt|Error 404 - Natural Things.mp3)/,'this_is_ok').include? "error"
       puts "\nERROR"
       print_mail_in_short(msg)
     end
