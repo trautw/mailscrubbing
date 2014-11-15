@@ -56,6 +56,8 @@ defaults = YAML.load('
   max_mails: 2
   maxage: 30
   folder_name: "daily"
+  ok_error_strings: "(logs/www/error_log|/var/spool/postfix/private/error|if_errors-6in4-wan6.rrd|ElsterErrorInfos.txt|Error 404 - Natural Things.mp3|var/cache/apt/archives/liberror)"
+  ok_fatal_strings: "(libfatal)"
   by_cron_job:
     min_mails: 5
     max_mails: 10
@@ -111,6 +113,16 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
     max_mails =  conf[base_folder_name]['max_mails']
   end
 
+  ok_strings = conf['ok_error_strings']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['ok_error_strings'].nil?
+    ok_error_strings =  conf[base_folder_name]['ok_error_strings']
+  end
+
+  ok_fatal_strings = conf['ok_fatal_strings']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['ok_fatal_strings'].nil?
+    ok_fatal_strings =  conf[base_folder_name]['ok_fatal_strings']
+  end
+
   # Check if mails still arriving
   arrival_hours = (Time.now - 24*60*60*arrival_period).strftime("%d-%b-%Y")
   last_24_mails = imap.search(["SINCE", arrival_hours])
@@ -128,15 +140,18 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
   imap.search(["SINCE", last_24_hours]).each do |msg_id|
     msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
     body = msg.attr["BODY[TEXT]"]
-    # puts "#{body}"
-    if body.downcase().gsub(/(logs\/www\/error_log|\/var\/spool\/postfix\/private\/error|if_errors-6in4-wan6.rrd|ElsterErrorInfos.txt|Error 404 - Natural Things.mp3)/,'this_is_ok').include? "error"
+    if body.downcase().gsub(/#{ok_error_strings}/,'this_is_ok').include? "error"
       puts "\nERROR"
       print_mail_in_short(msg)
+      body.lines.find { |line| if line.downcase().include?("error") then puts line end }
     end
-    if body.downcase().include? "fatal"
+
+    if body.downcase().gsub(/#{ok_fatal_strings}/,'this_is_ok').include? "fatal"
       puts "\nFATAL"
       print_mail_in_short(msg)
+      body.lines.find { |line| if line.downcase().include?("fatal") then puts line end }
     end
+
     if body.downcase().include? "critical"
       puts "\nCRITICAL"
       print_mail_in_short(msg)
