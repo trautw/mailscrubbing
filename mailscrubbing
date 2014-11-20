@@ -55,6 +55,7 @@ defaults = YAML.load('
   min_mails: 1
   max_mails: 2
   maxage: 30
+  no_check_before: 2000-01-01
   folder_name: "daily"
   ok_strings: "(logs/www/error_log|/var/spool/postfix/private/error|if_errors-6in4-wan6.rrd|ElsterErrorInfos.txt|Error 404 - Natural Things.mp3|var/cache/apt/archives/liberror|libfatal)"
   by_cron_job:
@@ -77,9 +78,10 @@ def pretty_mail_adresses(mailadresses)
   result
 end
 
-def print_mail_in_short(msg)
+def print_mail_in_short(folder_name,msg)
   date = msg.attr["ENVELOPE"].date
   body = msg.attr["BODY[TEXT]"]
+  puts "Folder : #{folder_name}"
   puts "From   : #{pretty_mail_adresses(msg.attr['ENVELOPE'].from)}"
   puts "To   : #{pretty_mail_adresses(msg.attr['ENVELOPE'].to)}"
   puts "Subject: #{msg.attr['ENVELOPE'].subject}"
@@ -117,6 +119,11 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
     ok_error_strings =  conf[base_folder_name]['ok_strings']
   end
 
+  no_check_before = conf['no_check_before']
+  unless conf[base_folder_name].nil? or conf[base_folder_name]['no_check_before'].nil?
+    no_check_before =  conf[base_folder_name]['no_check_before']
+  end
+
   # Check if mails still arriving
   arrival_hours = (Time.now - 24*60*60*arrival_period).strftime("%d-%b-%Y")
   last_24_mails = imap.search(["SINCE", arrival_hours])
@@ -125,20 +132,22 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
     puts "\nERROR: Fresh mail count is #{last_24_mails.count} but should be between #{min_mails} and #{max_mails} in #{folder_name}"
     last_24_mails.each do |msg_id|
       msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
-      print_mail_in_short(msg)
+      print_mail_in_short(base_folder_name,msg)
     end
   end
 
-  last_24_hours = (Time.now - 24*60*60).strftime("%d-%b-%Y")
-  # Check latest Mail for errors
-  imap.search(["SINCE", last_24_hours]).each do |msg_id|
-    msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
-    body = msg.attr["BODY[TEXT]"]
-    ['error','critical','fatal'].each do |error_string|
-      if body.downcase().gsub(/#{ok_strings}/,'this_is_ok').include? error_string
-        puts "\n#{error_string.upcase}"
-        print_mail_in_short(msg)
-        body.lines.find { |line| if line.downcase().include?(error_string) then puts line end }
+  if DateTime.now > no_check_before
+    last_24_hours = (Time.now - 24*60*60).strftime("%d-%b-%Y")
+    # Check latest Mail for errors
+    imap.search(["SINCE", last_24_hours]).each do |msg_id|
+      msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
+      body = msg.attr["BODY[TEXT]"]
+      ['error','critical','fatal'].each do |error_string|
+        if body.downcase().gsub(/#{ok_strings}/,'this_is_ok').include? error_string
+          puts "\n#{error_string.upcase}"
+          print_mail_in_short(base_folder_name,msg)
+          body.lines.find { |line| if line.downcase().include?(error_string) then puts line end }
+        end
       end
     end
   end
@@ -153,7 +162,7 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
   imap.search(["NOT", "SINCE", old_before]).each do |msg_id|
     msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
     # puts "\nDELETING"
-    # print_mail_in_short(msg)
+    # print_mail_in_short(base_folder_name,msg)
     imap.store(msg_id, "+FLAGS", [:Deleted])
   end
 end
