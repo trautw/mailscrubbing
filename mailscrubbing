@@ -128,15 +128,15 @@ imap.list("", "#{conf['folder_name']}/%").each do |folder|
   arrival_hours = (Time.now - 24*60*60*arrival_period).strftime("%d-%b-%Y")
   last_24_mails = imap.search(["SINCE", arrival_hours])
 
-  if last_24_mails.count < min_mails or last_24_mails.count > max_mails
-    puts "\nERROR: Fresh mail count is #{last_24_mails.count} but should be between #{min_mails} and #{max_mails} in #{folder_name}"
-    last_24_mails.each do |msg_id|
-      msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
-      print_mail_in_short(base_folder_name,msg)
-    end
-  end
-
   if DateTime.now > no_check_before
+    if last_24_mails.count < min_mails or last_24_mails.count > max_mails
+      puts "\nERROR: Fresh mail count is #{last_24_mails.count} but should be between #{min_mails} and #{max_mails} in #{folder_name}"
+      last_24_mails.each do |msg_id|
+        msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
+        print_mail_in_short(base_folder_name,msg)
+      end
+    end
+
     last_24_hours = (Time.now - 24*60*60).strftime("%d-%b-%Y")
     # Check latest Mail for errors
     imap.search(["SINCE", last_24_hours]).each do |msg_id|
