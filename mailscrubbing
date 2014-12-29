@@ -91,7 +91,9 @@ end
 
 # puts "Foldername = #{conf['folder_name']}"
 
-imap.list("", "#{conf['folder_name']}/%").each do |folder|
+delim =  imap.list("","").first['delim']
+
+imap.list("", "#{conf['folder_name']}#{delim}%").each do |folder|
   # puts "Folder #{folder.name}"
   folder_name = folder.name
   imap.select(folder_name)
