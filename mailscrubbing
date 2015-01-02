@@ -98,7 +98,8 @@ imap.list("", "#{conf['folder_name']}#{delim}%").each do |folder|
   folder_name = folder.name
   imap.select(folder_name)
 
-  base_folder_name = folder_name.split('/')[1]
+  folder_hierarchy = folder_name.split(delim)
+  base_folder_name = folder_hierarchy[folder_hierarchy.size - 1]
   # puts "Base Folder Name = #{base_folder_name}"
 
   arrival_period = conf['arrival_period']
@@ -118,7 +119,7 @@ imap.list("", "#{conf['folder_name']}#{delim}%").each do |folder|
 
   ok_strings = conf['ok_strings']
   unless conf[base_folder_name].nil? or conf[base_folder_name]['ok_strings'].nil?
-    ok_error_strings =  conf[base_folder_name]['ok_strings']
+    ok_strings =  conf[base_folder_name]['ok_strings']
   end
 
   no_check_before = conf['no_check_before']
