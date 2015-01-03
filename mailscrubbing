@@ -63,7 +63,8 @@ defaults = YAML.load('
     max_mails: 10
 ')
 
-conf = defaults.merge( rc = YAML.load( File.open("#{ENV['HOME']}/.mailscrubbing.rc").read ))
+conf = defaults.merge( rc = YAML.load( File.open("#{ENV['HOME']}/.mailscrubbing.login").read ))
+conf = conf.merge( rc = YAML.load( File.open("#{ENV['HOME']}/.mailscrubbing.rc").read ))
 
 # puts "conf = #{conf}"
 
