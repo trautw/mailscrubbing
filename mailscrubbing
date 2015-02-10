@@ -146,7 +146,7 @@ imap.list("", "#{conf['folder_name']}#{delim}%").each do |folder|
     imap.search(["SINCE", last_24_hours]).each do |msg_id|
       msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
       body = msg.attr["BODY[TEXT]"]
-      ['error','critical','fatal'].each do |error_string|
+      ['error','critical','fatal','malformed'].each do |error_string|
         if body.downcase().gsub(/#{ok_strings}/,'this_is_ok').include? error_string
           puts "\n#{error_string.upcase}"
           print_mail_in_short(base_folder_name,msg)
