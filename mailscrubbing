@@ -147,7 +147,7 @@ imap.list("", "#{conf['folder_name']}#{delim}%").each do |folder|
       msg = imap.fetch(msg_id, "(UID RFC822.SIZE ENVELOPE BODY[TEXT])")[0]
       body = msg.attr["BODY[TEXT]"]
       ['error','critical','fatal','malformed'].each do |error_string|
-        if body.downcase().gsub(/#{ok_strings}/,'this_is_ok').include? error_string
+        if body.downcase().gsub(/#{ok_strings.downcase()}/,'this_is_ok').include? error_string
           puts "\n#{error_string.upcase}"
           print_mail_in_short(base_folder_name,msg)
           body.lines.find { |line| if line.downcase().include?(error_string) then puts line end }
