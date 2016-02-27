@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 source $HOME/.rvm/scripts/rvm
 exec ruby -x $0 "$@"
 #!ruby
