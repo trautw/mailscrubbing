@@ -1,6 +1,5 @@
 #!/bin/bash -l
-source $HOME/.rvm/scripts/rvm
-exec ruby -x $0 "$@"
+exec $HOME/.rvm/wrappers/default/ruby -x $0 "$@"
 #!ruby
 require 'net/imap'
 require 'yaml'
