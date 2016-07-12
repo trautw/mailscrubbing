@@ -172,6 +172,7 @@ end
 
 mydir = File.expand_path(File.dirname(__FILE__))
 # puts "mydir = #{mydir}"
+puts "\nSelfupdating..."
 Dir.chdir(mydir)
 system 'git pull -q'
 
