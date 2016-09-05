@@ -149,7 +149,7 @@ imap.list("", "#{conf['folder_name']}#{delim}%").each do |folder|
         if body.downcase().gsub(/#{ok_strings.downcase()}/,'this_is_ok').include? error_string
           puts "\n#{error_string.upcase}"
           print_mail_in_short(base_folder_name,msg)
-          body.lines.find { |line| if line.downcase().include?(error_string) then puts line end }
+          body.lines.find { |line| if line.downcase().gsub(/#{ok_strings.downcase()}/,'this_is_ok').include?(error_string) then puts line end }
         end
       end
     end
